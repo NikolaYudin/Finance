@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a365d">
+<title>ФинПрофиль семьи</title>
+<style>
+:root{
+  --primary:#1a365d; --secondary:#2b6cb0; --accent:#ed8936;
+  --success:#38a169; --warning:#d69e2e; --danger:#e53e3e;
+  --bg:#f7fafc; --card:#fff; --text:#2d3748; --line:#e2e8f0;
+}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:0 12px calc(70px + env(safe-area-inset-bottom))}
+.container{max-width:900px;margin:0 auto}
+header{text-align:center;padding:16px 0;border-bottom:2px solid var(--secondary);margin-bottom:14px}
+h1{color:var(--primary);margin:0;font-size:1.3em}
+.subtitle{color:var(--secondary);font-size:.9em;margin-top:4px}
+.card{background:var(--card);border-radius:10px;padding:14px;box-shadow:0 2px 5px rgba(0,0,0,.05);margin-bottom:14px}
+.card h3{margin:0 0 10px;color:var(--secondary);border-bottom:1px solid var(--line);padding-bottom:6px;font-size:1.05em}
+table{width:100%;border-collapse:collapse;font-size:.88em}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#edf2f7;font-weight:600}
+.badge{padding:2px 8px;border-radius:4px;font-size:.85em;font-weight:bold;display:inline-block}
+.b-ok{background:#c6f6d5;color:#22543d}.b-warn{background:#fefcbf;color:#744210}.b-dng{background:#fed7d7;color:#822727}
+.metric-box{display:flex;flex-wrap:wrap;justify-content:space-between;background:var(--primary);color:#fff;padding:12px;border-radius:10px;margin-bottom:14px}
+.metric{flex:1 1 45%;text-align:center;padding:6px}
+.metric span{display:block;font-size:1.25em;font-weight:bold}
+.metric small{font-size:.72em;opacity:.9}
+
+/* tabs */
+.tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.tab{flex:1;min-width:90px;text-align:center;padding:10px;border-radius:8px;background:#e2e8f0;font-weight:600;font-size:.9em;cursor:pointer;border:none;color:var(--text)}
+.tab.active{background:var(--primary);color:#fff}
+.page{display:none}.page.active{display:block}
+
+/* inputs */
+label{display:block;font-size:.8em;font-weight:600;color:#4a5568;margin:8px 0 3px}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;padding:11px;border:1.5px solid #cbd5e0;border-radius:8px;font-size:16px;background:#fff;color:var(--text)}
+textarea{resize:vertical;min-height:70px}
+button{border:none;border-radius:8px;padding:11px 14px;font-size:.95em;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--primary);color:#fff;width:100%}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-danger{background:#fed7d7;color:#822727}
+.btn-sm{padding:6px 10px;font-size:.8em}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.hint{font-size:.75em;color:#718096;margin-top:4px}
+
+/* dropzone */
+.drop{border:2px dashed #90cdf4;border-radius:10px;padding:18px;text-align:center;color:#2b6cb0;background:#ebf8ff;font-size:.9em}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.thumb{position:relative;width:80px;height:80px}
+.thumb img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.thumb .del{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border-radius:50%;width:22px;height:22px;font-size:13px;line-height:1;padding:0}
+.log-item{border-bottom:1px solid var(--line);padding:8px 0;font-size:.88em}
+.log-item .meta{color:#718096;font-size:.85em}
+pre.raw{white-space:pre-wrap;background:#edf2f7;border-radius:8px;padding:10px;font-size:.8em;max-height:200px;overflow:auto}
+.empty{color:#a0aec0;font-size:.85em;text-align:center;padding:10px}
+footer{text-align:center;font-size:.75em;color:#a0aec0;padding:10px 0}
+a.link{color:var(--secondary)}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>📇 ФинПрофиль семьи Юдиных</h1>
+  <div class="subtitle">Данные хранятся только в этом телефоне • Работает офлайн</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-page="dash">📊 Профиль</button>
+  <button class="tab" data-page="add">➕ Данные</button>
+  <button class="tab" data-page="log">🗂 Журнал</button>
+  <button class="tab" data-page="set">⚙️ Настройки</button>
+</div>
+
+<!-- ================= ДАШБОРД ================= -->
+<div class="page active" id="page-dash">
+  <div class="metric-box" id="metrics"></div>
+
+  <div class="card">
+    <h3>✏️ Основные показатели <button class="btn-sm btn-accent" style="float:right" onclick="editSection('metrics')">Изменить</button></h3>
+    <div id="view-metrics"></div>
+  </div>
+
+  <div class="card">
+    <h3>👨‍👩‍👦 Семья <button class="btn-sm btn-accent" style="float:right" onclick="editSection('family')">Изменить</button></h3>
+    <div id="view-family"></div>
+  </div>
+
+  <div class="card">
+    <h3>💰 Доходы <button class="btn-sm btn-accent" style="float:right" onclick="editSection('income')">Изменить</button></h3>
+    <div id="view-income"></div>
+  </div>
+
+  <div class="card">
+    <h3>📉 Обязательные платежи <button class="btn-sm btn-accent" style="float:right" onclick="editSection('payments')">Изменить</button></h3>
+    <div id="view-payments"></div>
+  </div>
+
+  <div class="card">
+    <h3>🛡️ НЗ и долги <button class="btn-sm btn-accent" style="float:right" onclick="editSection('debts')">Изменить</button></h3>
+    <div id="view-debts"></div>
+  </div>
+
+  <div class="card">
+    <h3>📦 Конверты <button class="btn-sm btn-accent" style="float:right" onclick="editSection('envelopes')">Изменить</button></h3>
+    <div id="view-envelopes"></div>
+  </div>
+
+  <div class="card">
+    <h3>📅 Календарь / события <button class="btn-sm btn-accent" style="float:right" onclick="editSection('calendar')">Изменить</button></h3>
+    <div id="view-calendar"></div>
+  </div>
+
+  <div class="card">
+    <h3>⚙️ Правила системы <button class="btn-sm btn-accent" style="float:right" onclick="editSection('rules')">Изменить</button></h3>
+    <div id="view-rules"></div>
+  </div>
+</div>
+
+<!-- ================= ВВОД ДАННЫХ ================= -->
+<div class="page" id="page-add">
+
+  <div class="card">
+    <h3>📝 Быстрая заметка текстом</h3>
+    <p class="hint">Вставьте любой текст: расшифровку скриншота из банка, голосовую заметку, цифры. Он попадёт в журнал и будет привязан к выбранному разделу.</p>
+    <label>Раздел</label>
+    <select id="note-section">
+      <option value="journal">Просто в журнал</option>
+      <option value="metrics">Основные показатели</option>
+      <option value="income">Доходы</option>
+      <option value="payments">Обязательные платежи</option>
+      <option value="debts">НЗ и долги</option>
+      <option value="envelopes">Конверты</option>
+      <option value="calendar">Календарь</option>
+      <option value="family">Семья</option>
+      <option value="rules">Правила</option>
+    </select>
+    <label>Текст</label>
+    <textarea id="note-text" placeholder="Например: остаток по кредитке 4 893 ₽, НЗ Аллы 24 468 ₽, оплачен аванс..."></textarea>
+    <div style="margin-top:10px"><button class="btn-primary" onclick="saveNote()">💾 Сохранить заметку</button></div>
+  </div>
+
+  <div class="card">
+    <h3>🖼 Скриншоты (банк, чеки, выписки)</h3>
+    <div class="drop" id="drop">
+        📸 Нажмите, чтобы выбрать фото,<br>или перетащите скриншоты сюда
+        <input type="file" id="file-input" accept="image/*" multiple hidden>
+    </div>
+    <div class="thumbs" id="pending-thumbs"></div>
+    <label>Комментарий к снимкам (необязательно)</label>
+    <input type="text" id="img-comment" placeholder="Например: выписка Т-Банк на 30.09">
+    <div class="row" style="margin-top:10px">
+      <button class="btn-primary" onclick="saveImages()">💾 Сохранить снимки</button>
+    </div>
+    <p class="hint">⚠️ Телефон не может сам «прочитать» цифры со скриншота. Удобный способ: откройте скриншот в приложении с распознаванием текста (Google Фото → выделить текст, или «сканер текста»), скопируйте цифры и вставьте в заметку выше.</p>
+  </div>
+
+  <div class="card">
+    <h3>🧮 Калькулятор бюджета</h3>
+    <div class="row">
+      <div><label>Доходы (₽)</label><input type="number" id="calc-in" inputmode="decimal" placeholder="126000"></div>
+      <div><label>Расходы (₽)</label><input type="number" id="calc-out" inputmode="decimal" placeholder="100000"></div>
+    </div>
+    <div id="calc-result" style="margin-top:8px;font-weight:bold"></div>
+    <div style="margin-top:8px"><button class="btn-accent" style="width:100%" onclick="calcToNote()">➕ Записать результат в заметку</button></div>
+  </div>
+</div>
+
+<!-- ================= ЖУРНАЛ ================= -->
+<div class="page" id="page-log">
+  <div class="card">
+    <h3>🗂 Журнал загрузок</h3>
+    <input type="text" id="log-search" placeholder="🔍 Поиск по тексту..." oninput="renderLog()">
+    <div id="log-list" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- ================= НАСТРОЙКИ ================= -->
+<div class="page" id="page-set">
+  <div class="card">
+    <h3>💾 Резная копия</h3>
+    <p class="hint">Все данные лежат только в памяти телефона (localStorage). Сделайте копию, если чистите данные браузера или меняете телефон.</p>
+    <div class="row">
+      <button class="btn-accent" onclick="exportData()">⬇️ Скачать копию</button>
+      <button class="btn-primary" style="flex:1" onclick="document.getElementById('import-file').click()">⬆️ Загрузить копию</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" hidden onchange="importData(event)">
+  </div>
+  <div class="card">
+    <h3>🗑 Опасная зона</h3>
+    <button class="btn-danger" style="width:100%" onclick="wipeAll()">Удалить ВСЕ данные</button>
+  </div>
+  <div class="card">
+    <h3>📱 Установка на телефон</h3>
+    <p class="hint">Откройте этот файл в Chrome/Safari → меню → «Добавить на главный экран». Будет открываться как приложение, работает без интернета.</p>
+  </div>
+</div>
+
+<footer>Мастер-Профиль v1 • данные не покидают устройство</footer>
+</div>
+
+<!-- модальное редактирование раздела -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;padding:20px;overflow:auto">
+  <div class="card" style="max-width:640px;margin:0 auto">
+    <h3 id="modal-title">Редактирование</h3>
+    <p class="hint">Формат: каждая строка — «Заголовок | Значение». Первая строка «# | Таблица ...» задаёт шапку колонок. Строки без | — обычный текст.</p>
+    <textarea id="modal-editor" style="min-height:220px"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn-primary" onclick="saveModal()">💾 Сохранить</button>
+      <button class="btn-danger" onclick="closeModal()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const KEY='finprofile-v1';
+const SECTION_NAMES={metrics:'Основные показатели',family:'Семья',income:'Доходы',payments:'Обязательные платежи',debts:'НЗ и долги',envelopes:'Конверты',calendar:'Календарь',rules:'Правила'};
+
+// ---------- дефолтный профиль (из вашего HTML) ----------
+const DEFAULT_DATA={
+ metrics:`# | Показатель | Значение
+НЗ Аллы (Суверенитет) | 24 468 ₽
+Просрочки | 0 ✅
+Долг ФССП (остаток) | ~51 000 ₽
+Долг СберКредитка | 4 893 ₽`,
+ family:`# | Кто | Детали
+Николай | 07.10.1991 (35). Системный администратор.
+Алла | 12.04.1992 (34). Учитель, репетитор.
+Арсений | 10.02.2021 (5). Сад + развивашка.
+Лучик 🐈 | Royal Canin Urinary S/O (~2 900 ₽/мес).
+Контур | Семейные деньги — Т-Банк Аллы. Личные сервисы Н. — отдельно (защита ФССП).`,
+ income:`# | Источник | Сумма / детали
+Николай | ~75 700 ₽ (ЗП 6.4к + Серый конверт 35.6к + Калым 22к + Прочее)
+Алла | ~47 300 ₽ (ЗП 22.7к + Аванс 19к + Репетиторство)
+Даты | ЗП Н: 5-е | Аванс Н: 20-е | ЗП А: 9-е | Аванс А: 25-е
+ФССП | -12 000 ₽ ежемесячно из ЗП Николая`,
+ payments:`# | Платёж | Сумма и срок
+Автомобиль | 14 700 ₽ (12-е число)
+Ипотека ВТБ | 7 110 ₽ (15–19 число)
+СберКредитка | ~6 850 ₽ (до 18-го числа)
+ФССП | 12 000 ₽ (автоматически)
+Школа развития | 4 000 ₽ (по средам)
+ЖКХ + Связь | ~8 200 ₽ + ~2 800 ₽`,
+ debts:`# | Позиция | Состояние
+НЗ Аллы | 24 468,94 ₽ ✅
+Внутренний долг | 20 000 ₽ (возврат в НЗ с октября, 3к/мес)
+СберКредитка | ~145 000 ₽ (лимит) ⚠️
+Рассрочка колесо | 3 955 ₽ (платеж 25.11)
+Треки Аллы | ~10 500 ₽ (Kari, Ситилаб)`,
+ envelopes:`# | Конверт | Баланс | Назначение / триггер
+💳 Black (Оперативный) | 3 099,84 ₽ | Минимум 1 000 ₽
+🛒 Продукты | 0,45 ₽ | Пополнение при <500 ₽ (аванс 25.10)
+⛽ Бензин | 0,22 ₽ | Каскад-уикенды, порог ≤200 км
+🛟 Буфер | 718,50 ₽ | Цель: 4 000+ ₽
+🚗 Авто | 700,33 ₽ | Переобувка, ТО
+🛠 Ремонт | 2 507 ₽ | Целевой резерв
+👕 Гардероб | 188 ₽ | Целевой резерв
+🎁 Праздники | 1,23 ₽ | ДР Николая 07.10 (бюджет из калыма)`,
+ calendar:`# | Дата | Событие | Сумма | Источник
+07.10 | 🎂 ДР Николая (35 лет) | ~5 000 ₽ | Black + текущие
+12.10 | 🚗 Автокредит | 14 700 ₽ | Плановый
+15–19.10 | 🏠 Ипотека ВТБ | 7 110 ₽ | Плановый
+18.10 | 💳 Кредитка обязательный | 6 849,53 ₽ | Black + аванс
+25.10 | 💰 Аванс Аллы | ~19 000 ₽ | Перезаправка конвертов
+Октябрь | 🛞 Переобувка Гранты | ~5 000 ₽ | «Авто» + доливка`,
+ rules:`# | Правило | Суть
+НЗ суверенен | Здоровье/работа/форс-мажор. Никаких «хотелок». Пополнение 3к/мес с октября.
+48 часов | Остывание для спонтанных покупок.
+Транзиты ≠ траты | Перекладывания между счетами не считаются расходами.
+Воскресная сверка | Каждое воскресенье — полный аудит Мастер-Профиля.
+Сезонность | Зимой топливо дороже, осень — грибы и огород (инвестиция).`
+};
+
+let db=load();
+function load(){
+  try{const raw=localStorage.getItem(KEY); if(raw) return JSON.parse(raw);}catch(e){}
+  return {sections:{...DEFAULT_DATA}, journal:[]};
+}
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(db));}
+  catch(e){alert('Память телефона заполнена! Удалите старые скриншоты в Журнале.');} }
+
+// ---------- рендер таблиц ----------
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function renderTable(text){
+  if(!text||!text.trim()) return '<div class="empty">Пусто — нажмите «Изменить»</div>';
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  let head=null; const rows=[];
+  for(const l of lines){
+    if(l.startsWith('#')){ if(!head) head=l.slice(1).split('|').map(c=>c.trim()); continue; }
+    if(l.includes('|')) rows.push(l.split('|').map(c=>c.trim()));
+    else rows.push([l]);
+  }
+  if(!rows.length && !head) return '<p>'+esc(lines.join('\n'))+'</p>';
+  const cols=Math.max(head?head.length:0,...rows.map(r=>r.length));
+  let h='<table>';
+  if(head){h+='<tr>'+Array.from({length:cols},(_,i)=>'<th>'+esc(head[i]||'')+'</th>').join('')+'</tr>';}
+  for(const r of rows){
+    h+='<tr>'+Array.from({length:cols},(_,i)=>{
+      const c=r[i]||''; let cls='b-ok';
+      if(c.includes('⚠️'))cls='b-warn'; if(c.includes('❌'))cls='b-dng';
+      const styled=esc(c).replace(/✅/,'<span class="badge '+cls+'">OK</span>');
+      return '<td'+(i===0?' style="font-weight:600"':'')+'>'+styled+'</td>';
+    }).join('')+'</tr>';
+  }
+  return h+'</table>';
+}
+function renderDash(){
+  for(const k of Object.keys(SECTION_NAMES)){
+    const el=document.getElementById('view-'+k); if(el) el.innerHTML=renderTable(db.sections[k]);
+  }
+  // метрики = первые строки раздела metrics
+  const m=document.getElementById('metrics'); m.innerHTML='';
+  const lines=(db.sections.metrics||'').split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('#'));
+  lines.slice(0,4).forEach(l=>{
+    const p=l.split('|').map(c=>c.trim());
+    m.innerHTML+='<div class="metric"><span>'+esc(p[1]||p[0])+'</span><small>'+esc(p[0]||(p[1]?p[1]:''))+'</small></div>';
+  });
+}
+
+// ---------- модалка редактирования ----------
+let curSection=null;
+function editSection(k){
+  curSection=k;
+  document.getElementById('modal-title').textContent='✏️ '+SECTION_NAMES[k];
+  document.getElementById('modal-editor').value=db.sections[k]||'';
+  document.getElementById('modal').style.display='block';
+}
+function saveModal(){ db.sections[curSection]=document.getElementById('modal-editor').value; save(); closeModal(); renderDash(); }
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+
+// ---------- заметки ----------
+function saveNote(){
+  const t=document.getElementById('note-text').value.trim();
+  if(!t){alert('Введите текст');return;}
+  const sec=document.getElementById('note-section').value;
+  db.journal.unshift({id:Date.now(),type:'note',section:sec,text:t,date:new Date().toISOString()});
+  save(); document.getElementById('note-text').value='';
+  renderLog(); alert('✅ Сохранено в журнал'); switchPage('log');
+}
+
+// ---------- изображения ----------
+let pending=[];
+const drop=document.getElementById('drop'), fi=document.getElementById('file-input');
+drop.onclick=()=>fi.click();
+fi.onchange=e=>addFiles(e.target.files);
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.style.background='#bee3f8';}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.style.background='#ebf8ff';}));
+drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+function addFiles(files){
+  for(const f of files){
+    if(!f.type.startsWith('image/'))continue;
+    const r=new FileReader();
+    r.onload=ev=>{ shrinkImage(ev.target.result,img=>{ pending.push(img); renderThumbs(); }); };
+    r.readAsDataURL(f);
+  }
+  fi.value='';
+}
+function shrinkImage(dataUrl,cb){
+  const img=new Image();
+  img.onload=()=>{
+    const max=900, sc=Math.min(1,max/Math.max(img.width,img.height));
+    const c=document.createElement('canvas');
+    c.width=img.width*sc; c.height=img.height*sc;
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    cb(c.toDataURL('image/jpeg',0.7));
+  };
+  img.onerror=()=>cb(dataUrl);
+  img.src=dataUrl;
+}
+function renderThumbs(){
+  const w=document.getElementById('pending-thumbs'); w.innerHTML='';
+  pending.forEach((src,i)=>{
+    const d=document.createElement('div'); d.className='thumb';
+    d.innerHTML='<img src="'+src+'"><button class="del" onclick="pending.splice('+i+',1);renderThumbs()">×</button>';
+    w.appendChild(d);
+  });
+}
+function saveImages(){
+  if(!pending.length){alert('Сначала выберите скриншоты');return;}
+  const comment=document.getElementById('img-comment').value.trim();
+  for(const src of pending) db.journal.unshift({id:Math.random(),type:'img',section:'journal',text:comment,img:src,date:new Date().toISOString()});
+  pending=[]; renderThumbs(); document.getElementById('img-comment').value='';
+  save(); renderLog(); alert('✅ Снимки сохранены'); switchPage('log');
+}
+
+// ---------- журнал ----------
+function renderLog(){
+  const q=(document.getElementById('log-search').value||'').toLowerCase();
+  const w=document.getElementById('log-list'); w.innerHTML='';
+  const items=db.journal.filter(j=>j.type==='note'&&j.text.toLowerCase().includes(q));
+  const imgs=db.journal.filter(j=>j.type==='img'&&(j.text||'').toLowerCase().includes(q));
+  if(!items.length&&!imgs.length){w.innerHTML='<div class="empty">Пока пусто. Добавьте данные на вкладке «Данные».</div>';return;}
+  for(const j of items){
+    const d=document.createElement('div'); d.className='log-item';
+    const sec=j.section==='journal'?'Журнал':(SECTION_NAMES[j.section]||j.section);
+    d.innerHTML='<div class="meta">'+new Date(j.date).toLocaleString('ru-RU')+' • 📁 '+esc(sec)+
+      ' <a href="#" class="link" style="float:right" onclick="delEntry(\''+j.id+'\');return false">удалить</a></div>'+
+      '<pre class="raw">'+esc(j.text)+'</pre>';
+    w.appendChild(d);
+  }
+  for(const j of imgs){
+    const d=document.createElement('div'); d.className='log-item';
+    d.innerHTML='<div class="meta">'+new Date(j.date).toLocaleString('ru-RU')+' • 🖼 '+esc(j.text||'без комментария')+
+      ' <a href="#" class="link" style="float:right" onclick="delEntry(\''+j.id+'\');return false">удалить</a></div>'+
+      '<img src="'+j.img+'" style="max-width:100%;border-radius:8px;border:1px solid var(--line)" onclick="window.open(this.src)">';
+    w.appendChild(d);
+  }
+}
+function delEntry(id){ if(confirm('Удалить запись?')){ db.journal=db.journal.filter(j=>String(j.id)!==String(id)); save(); renderLog(); } }
+
+// ---------- калькулятор ----------
+function calc(){
+  const i=+document.getElementById('calc-in').value||0, o=+document.getElementById('calc-out').value||0;
+  const r=i-o;
+  document.getElementById('calc-result').innerHTML='Остаток: <span style="color:'+(r>=0?'var(--success)':'var(--danger)')+'">'+r.toLocaleString('ru-RU')+' ₽</span>';
+  return r;
+}
+document.getElementById('calc-in').oninput=calc; document.getElementById('calc-out').oninput=calc;
+function calcToNote(){
+  const i=+document.getElementById('calc-in').value||0,o=+document.getElementById('calc-out').value||0,r=calc();
+  document.getElementById('note-section').value='journal';
+  document.getElementById('note-text').value='Калькулятор: доходы '+i.toLocaleString('ru-RU')+' − расходы '+o.toLocaleString('ru-RU')+' = '+r.toLocaleString('ru-RU')+' ₽';
+  switchPage('add'); document.getElementById('note-text').scrollIntoView({behavior:'smooth'});
+}
+
+// ---------- экспорт/импорт ----------
+function exportData(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='finprofile-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+}
+function importData(e){
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{ try{ const d=JSON.parse(ev.target.result);
+    if(!d.sections||!d.journal) throw 0;
+    if(confirm('Заменить текущие данными из файла?')){ db=d; save(); renderDash(); renderLog(); alert('✅ Импорт завершён'); }
+  }catch(err){alert('Некорректный файл резервной копии');} };
+  r.readAsText(f); e.target.value='';
+}
+function wipeAll(){
+  if(confirm('Удалить ВСЕ данные и вернуть исходный профиль?')){
+    localStorage.removeItem(KEY); db=load(); renderDash(); renderLog();
+  }
+}
+
+// ---------- табы ----------
+function switchPage(p){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.page===p));
+  document.querySelectorAll('.page').forEach(pg=>pg.classList.toggle('active',pg.id==='page-'+p));
+  if(p==='log')renderLog();
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchPage(t.dataset.page));
+
+renderDash(); renderLog();
+</script>
+</body>
+</html>
